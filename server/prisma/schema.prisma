@@ -1,0 +1,64 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum UserRole {
+  ADMIN
+  MANAGER
+  TECHNICIAN
+  SAFETY_OFFICER
+  OPERATIONS
+}
+
+model User {
+  id          String   @id @default(uuid())
+  name        String
+  email       String   @unique
+  password    String
+
+  role        UserRole
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Aircraft {
+  id            String   @id @default(uuid())
+  aircraftNo    String   @unique
+  model         String
+  manufacturer  String
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model Crew {
+  id          String   @id @default(uuid())
+  name        String
+  designation String
+  email       String?  @unique
+
+  createdAt   DateTime @default(now())
+}
+
+model Policy {
+  id          String   @id @default(uuid())
+  title       String
+  description String?
+  fileUrl     String?
+
+  createdAt   DateTime @default(now())
+}
+
+model AuditLog {
+  id          String   @id @default(uuid())
+  action      String
+  entity      String
+  entityId    String
+
+  createdAt   DateTime @default(now())
+}
