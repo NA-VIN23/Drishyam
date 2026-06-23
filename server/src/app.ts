@@ -1,5 +1,6 @@
 import express from "express";
 import cors from "cors";
+import prisma from "./config/db";
 
 const app = express();
 
@@ -15,7 +16,6 @@ const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 });
-import prisma from "./config/db";
 
 app.get("/test-db", async (_req, res) => {
     try {

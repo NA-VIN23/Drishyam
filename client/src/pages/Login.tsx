@@ -40,7 +40,7 @@ const Login: React.FC = () => {
   return (
     <div style={{
       minHeight: '100vh',
-      background: 'linear-gradient(135deg, #020409 0%, #060913 40%, #0a1526 70%, #071020 100%)',
+      background: 'linear-gradient(135deg, #ffffff 0%, #f9fafb 40%, #f3f4f6 70%, #ffffff 100%)',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
@@ -57,7 +57,7 @@ const Login: React.FC = () => {
         <svg width="100%" height="100%" style={{ opacity: 0.06, position: 'absolute', inset: 0 }}>
           <defs>
             <pattern id="grid" width="60" height="60" patternUnits="userSpaceOnUse">
-              <path d="M 60 0 L 0 0 0 60" fill="none" stroke="#00d2ff" strokeWidth="0.5"/>
+              <path d="M 60 0 L 0 0 0 60" fill="none" stroke="#0891b2" strokeWidth="0.5"/>
             </pattern>
           </defs>
           <rect width="100%" height="100%" fill="url(#grid)" />
@@ -85,7 +85,7 @@ const Login: React.FC = () => {
             <div key={i} style={{
               position: 'absolute', inset: `${i * 15}%`,
               borderRadius: '50%',
-              border: `1px solid rgba(0,210,255,${0.04 - i * 0.01})`,
+              border: `1px solid rgba(8,145,178,${0.04 - i * 0.01})`,
             }} />
           ))}
         </div>
@@ -102,16 +102,16 @@ const Login: React.FC = () => {
           <div style={{
             display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
             width: '72px', height: '72px', borderRadius: '16px', marginBottom: '20px',
-            background: 'linear-gradient(135deg, rgba(0,210,255,0.15) 0%, rgba(59,130,246,0.1) 100%)',
-            border: '1px solid rgba(0,210,255,0.25)',
-            boxShadow: '0 0 30px rgba(0,210,255,0.15)',
+            background: 'linear-gradient(135deg, rgba(8,145,178,0.08) 0%, rgba(59,130,246,0.08) 100%)',
+            border: '1px solid rgba(8,145,178,0.2)',
+            boxShadow: '0 0 30px rgba(8,145,178,0.1)',
           }}>
-            <Plane size={34} color="#00d2ff" style={{ transform: 'rotate(45deg)' }} />
+            <Plane size={34} color="#0891b2" style={{ transform: 'rotate(45deg)' }} />
           </div>
 
           <h1 style={{
             fontSize: '30px', fontWeight: 800, letterSpacing: '0.1em',
-            background: 'linear-gradient(135deg, #f8fafc 0%, #00d2ff 100%)',
+            background: 'linear-gradient(135deg, #111827 0%, #0891b2 100%)',
             WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
             backgroundClip: 'text', margin: '0 0 6px'
           }}>
@@ -124,7 +124,7 @@ const Login: React.FC = () => {
 
         {/* Card Container */}
         <div style={{
-          background: 'linear-gradient(145deg, rgba(17,24,39,0.9) 0%, rgba(11,17,32,0.95) 100%)',
+          background: 'linear-gradient(145deg, rgba(255,255,255,0.7) 0%, rgba(243,244,246,0.9) 100%)',
           border: '1px solid var(--border-color)',
           borderRadius: '16px',
           padding: '36px',

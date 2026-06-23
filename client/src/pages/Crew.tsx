@@ -119,7 +119,7 @@ const Crew: React.FC = () => {
               style={{
                 padding: '8px 14px', borderRadius: '6px', fontSize: '13px', fontWeight: 500,
                 border: `1px solid ${statusFilter === s ? 'var(--accent-cyan)' : 'var(--border-color)'}`,
-                backgroundColor: statusFilter === s ? 'rgba(0,210,255,0.08)' : 'transparent',
+                backgroundColor: statusFilter === s ? 'rgba(8,145,178,0.08)' : 'transparent',
                 color: statusFilter === s ? 'var(--accent-cyan)' : 'var(--text-secondary)',
                 cursor: 'pointer', transition: 'all 0.15s ease',
                 fontFamily: 'var(--font-family)', whiteSpace: 'nowrap'
@@ -158,8 +158,8 @@ const Crew: React.FC = () => {
                     {/* Avatar initials circle */}
                     <div style={{
                       width: '34px', height: '34px', borderRadius: '50%', flexShrink: 0,
-                      background: 'linear-gradient(135deg, rgba(0,210,255,0.2) 0%, rgba(59,130,246,0.2) 100%)',
-                      border: '1px solid rgba(0,210,255,0.2)',
+                      background: 'linear-gradient(135deg, rgba(8,145,178,0.1) 0%, rgba(59,130,246,0.1) 100%)',
+                      border: '1px solid rgba(8,145,178,0.2)',
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                       fontSize: '12px', fontWeight: 700, color: 'var(--accent-cyan)'
                     }}>

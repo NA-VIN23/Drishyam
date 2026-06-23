@@ -5,6 +5,8 @@
   "main": "index.js",
   "scripts": {
     "dev": "tsx watch src/app.ts",
+    "prisma:generate": "prisma generate",
+    "postinstall": "prisma generate",
     "build": "tsc",
     "start": "node dist/app.js"
   },

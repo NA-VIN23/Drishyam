@@ -17,7 +17,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
         alignItems: 'center',
         justifyContent: 'center',
         height: '100vh',
-        backgroundColor: '#060913',
+        backgroundColor: '#f9fafb',
         color: '#f8fafc',
         fontFamily: 'Outfit, sans-serif'
       }}>
@@ -27,7 +27,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
           height: '50px',
           borderRadius: '50%',
           border: '3px solid rgba(0, 210, 255, 0.1)',
-          borderTopColor: '#00d2ff',
+          borderTopColor: '#0891b2',
           animation: 'spin 1s linear infinite',
           marginBottom: '16px'
         }}></div>

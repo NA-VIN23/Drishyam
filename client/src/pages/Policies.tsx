@@ -48,11 +48,11 @@ const Policies: React.FC = () => {
 
   const getCategoryColor = (category: string) => {
     switch (category) {
-      case 'Safety':          return { bg: 'rgba(239,68,68,0.1)', color: '#f87171', border: 'rgba(239,68,68,0.25)' };
-      case 'Operations':      return { bg: 'rgba(59,130,246,0.1)', color: '#60a5fa', border: 'rgba(59,130,246,0.25)' };
-      case 'Flight Operations': return { bg: 'rgba(0,210,255,0.1)', color: '#00d2ff', border: 'rgba(0,210,255,0.25)' };
-      case 'Maintenance':     return { bg: 'rgba(245,158,11,0.1)', color: '#fbbf24', border: 'rgba(245,158,11,0.25)' };
-      case 'Regulatory':      return { bg: 'rgba(139,92,246,0.1)', color: '#a78bfa', border: 'rgba(139,92,246,0.25)' };
+      case 'Safety':          return { bg: 'rgba(220,38,38,0.1)', color: '#dc2626', border: 'rgba(220,38,38,0.25)' };
+      case 'Operations':      return { bg: 'rgba(59,130,246,0.1)', color: '#2563eb', border: 'rgba(59,130,246,0.25)' };
+      case 'Flight Operations': return { bg: 'rgba(8,145,178,0.1)', color: '#0891b2', border: 'rgba(8,145,178,0.25)' };
+      case 'Maintenance':     return { bg: 'rgba(217,119,6,0.1)', color: '#d97706', border: 'rgba(217,119,6,0.25)' };
+      case 'Regulatory':      return { bg: 'rgba(139,92,246,0.1)', color: '#7c3aed', border: 'rgba(139,92,246,0.25)' };
       default:                return { bg: 'rgba(156,163,175,0.1)', color: '#9ca3af', border: 'rgba(156,163,175,0.25)' };
     }
   };
@@ -90,7 +90,7 @@ const Policies: React.FC = () => {
             style={{
               padding: '8px 16px', borderRadius: '6px', fontSize: '13px', fontWeight: 500,
               border: `1px solid ${categoryFilter === cat ? 'var(--accent-cyan)' : 'var(--border-color)'}`,
-              backgroundColor: categoryFilter === cat ? 'rgba(0,210,255,0.08)' : 'var(--bg-card)',
+              backgroundColor: categoryFilter === cat ? 'rgba(8,145,178,0.08)' : 'var(--bg-card)',
               color: categoryFilter === cat ? 'var(--accent-cyan)' : 'var(--text-secondary)',
               cursor: 'pointer', transition: 'all 0.15s ease',
               fontFamily: 'var(--font-family)', whiteSpace: 'nowrap'
@@ -257,7 +257,7 @@ const Policies: React.FC = () => {
                     display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
                     gap: '8px', padding: '28px 20px', borderRadius: '8px', cursor: 'pointer',
                     border: `2px dashed ${fileName ? 'var(--accent-cyan)' : 'var(--border-color)'}`,
-                    backgroundColor: fileName ? 'rgba(0,210,255,0.04)' : 'rgba(6,9,19,0.4)',
+                    backgroundColor: fileName ? 'rgba(8,145,178,0.04)' : 'rgba(243,244,246,0.4)',
                     transition: 'all 0.2s ease'
                   }}>
                     <Upload size={24} color={fileName ? 'var(--accent-cyan)' : 'var(--text-muted)'} />

@@ -52,7 +52,7 @@ const StatCard: React.FC<StatCardProps> = ({
       default:
         return {
           iconBg: 'rgba(0, 210, 255, 0.1)',
-          iconColor: '#00d2ff',
+          iconColor: '#0891b2',
           glow: 'rgba(0, 210, 255, 0.1)'
         };
     }

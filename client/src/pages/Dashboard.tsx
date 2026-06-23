@@ -182,11 +182,11 @@ const Dashboard: React.FC = () => {
                   width: '24px', height: '24px', borderRadius: '50%', flexShrink: 0,
                   backgroundColor: act.type === 'critical' ? 'var(--status-aog-bg)' :
                     act.type === 'warning' ? 'var(--status-maint-bg)' :
-                    act.type === 'success' ? 'var(--status-active-bg)' : 'rgba(0,210,255,0.1)',
+                    act.type === 'success' ? 'var(--status-active-bg)' : 'rgba(8,145,178,0.1)',
                   border: `1px solid ${
                     act.type === 'critical' ? 'var(--status-aog-border)' :
                     act.type === 'warning' ? 'var(--status-maint-border)' :
-                    act.type === 'success' ? 'var(--status-active-border)' : 'rgba(0,210,255,0.3)'}`,
+                    act.type === 'success' ? 'var(--status-active-border)' : 'rgba(8,145,178,0.3)'}`,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   zIndex: 1
                 }}>
@@ -223,10 +223,10 @@ const Dashboard: React.FC = () => {
               display: 'flex', alignItems: 'flex-start', gap: '14px',
               padding: '14px 16px', borderRadius: '8px',
               backgroundColor: alert.severity === 'critical' ? 'var(--status-aog-bg)' :
-                alert.severity === 'warning' ? 'var(--status-maint-bg)' : 'rgba(0,210,255,0.05)',
+                alert.severity === 'warning' ? 'var(--status-maint-bg)' : 'rgba(8,145,178,0.05)',
               border: `1px solid ${
                 alert.severity === 'critical' ? 'var(--status-aog-border)' :
-                alert.severity === 'warning' ? 'var(--status-maint-border)' : 'rgba(0,210,255,0.2)'}`
+                alert.severity === 'warning' ? 'var(--status-maint-border)' : 'rgba(8,145,178,0.2)'}`
             }}>
               <ShieldAlert
                 size={18}

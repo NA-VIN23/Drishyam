@@ -82,7 +82,7 @@ const Aircraft: React.FC = () => {
               style={{
                 padding: '8px 14px', borderRadius: '6px', fontSize: '13px', fontWeight: 500,
                 border: `1px solid ${statusFilter === s ? 'var(--accent-cyan)' : 'var(--border-color)'}`,
-                backgroundColor: statusFilter === s ? 'rgba(0,210,255,0.08)' : 'transparent',
+                backgroundColor: statusFilter === s ? 'rgba(8,145,178,0.08)' : 'transparent',
                 color: statusFilter === s ? 'var(--accent-cyan)' : 'var(--text-secondary)',
                 cursor: 'pointer', transition: 'all 0.15s ease', fontFamily: 'var(--font-family)'
               }}

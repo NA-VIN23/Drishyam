@@ -127,7 +127,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
                   fontSize: '15px',
                   fontWeight: 500,
                   color: isActive ? 'var(--accent-cyan)' : 'var(--text-secondary)',
-                  backgroundColor: isActive ? 'rgba(0, 210, 255, 0.05)' : 'transparent',
+                  backgroundColor: isActive ? 'rgba(8, 145, 178, 0.08)' : 'transparent',
                   borderLeft: isActive ? '3px solid var(--accent-cyan)' : '3px solid transparent',
                   transition: 'all var(--transition-fast)',
                   cursor: 'pointer'
@@ -144,7 +144,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
         <div style={{
           padding: '20px 16px',
           borderTop: '1px solid var(--border-color)',
-          backgroundColor: 'rgba(6, 9, 19, 0.4)',
+          backgroundColor: '#f9fafb',
           display: 'flex',
           flexDirection: 'column',
           gap: '12px'
@@ -226,12 +226,12 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
         }
         .nav-link-item:hover {
           color: var(--text-primary) !important;
-          background-color: rgba(255, 255, 255, 0.02) !important;
+          background-color: rgba(8, 145, 178, 0.05) !important;
           padding-left: 20px !important;
         }
         .nav-link-item.active:hover {
           color: var(--accent-cyan) !important;
-          background-color: rgba(0, 210, 255, 0.08) !important;
+          background-color: rgba(8, 145, 178, 0.1) !important;
         }
       `}</style>
     </>
