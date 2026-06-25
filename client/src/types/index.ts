@@ -1,7 +1,8 @@
 export interface User {
   name: string;
   email: string;
-  role: string;
+  roleKey: string;
+  roleLabel: string;
   avatarUrl?: string;
 }
 

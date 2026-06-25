@@ -1,9 +1,12 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import type { User } from '../types';
+import api, { setAuthToken } from '../api/axios';
+import { ROLE_LABELS, type RoleKey } from '../data/roles';
 
 interface AuthContextType {
   user: User | null;
   login: (email: string, password: string) => Promise<boolean>;
+  register: (name: string, email: string, password: string, roleKey: RoleKey) => Promise<boolean>;
   logout: () => void;
   isAuthenticated: boolean;
   isLoading: boolean;
@@ -15,52 +18,96 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  const mapUser = (backendUser: any): User => ({
+    name: backendUser.name,
+    email: backendUser.email,
+    roleKey: backendUser.role?.key ?? 'TECHNICIAN',
+    roleLabel: backendUser.role?.name ?? ROLE_LABELS[backendUser.role?.key as RoleKey] ?? 'Technician',
+  });
+
   useEffect(() => {
-    // Check if user is already logged in via localStorage
-    const savedUser = localStorage.getItem('drishyam_user');
-    if (savedUser) {
-      try {
-        setUser(JSON.parse(savedUser));
-      } catch (e) {
-        localStorage.removeItem('drishyam_user');
+    const bootstrapSession = async () => {
+      const token = localStorage.getItem('drishyam_token');
+
+      if (!token) {
+        setIsLoading(false);
+        return;
       }
-    }
-    setIsLoading(false);
+
+      setAuthToken(token);
+
+      try {
+        const response = await api.get('/auth/me');
+        const currentUser = response.data?.data;
+
+        if (currentUser) {
+          setUser(mapUser(currentUser));
+        }
+      } catch {
+        localStorage.removeItem('drishyam_token');
+        setAuthToken(null);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    void bootstrapSession();
   }, []);
 
   const login = async (email: string, password: string): Promise<boolean> => {
     setIsLoading(true);
-    // Simulate a brief API call delay
-    await new Promise((resolve) => setTimeout(resolve, 800));
+    try {
+      const response = await api.post('/auth/login', { email, password });
+      const { token, user: backendUser } = response.data?.data ?? {};
 
-    // Simple client validation - accepts any valid email and password
-    if (email.includes('@') && password.length >= 6) {
-      const mockUser: User = {
-        name: email.split('@')[0].split('.').map(part => part.charAt(0).toUpperCase() + part.slice(1)).join(' '),
-        email: email,
-        role: email.includes('admin') ? 'Operations Director' : 'Maintenance Inspector',
-        avatarUrl: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100&h=100&fit=crop&crop=faces'
-      };
-      
-      localStorage.setItem('drishyam_user', JSON.stringify(mockUser));
-      setUser(mockUser);
-      setIsLoading(false);
+      if (!token || !backendUser) {
+        return false;
+      }
+
+      setAuthToken(token);
+
+      setUser(mapUser(backendUser));
       return true;
+    } catch {
+      setAuthToken(null);
+      setUser(null);
+      return false;
+    } finally {
+      setIsLoading(false);
     }
-
-    setIsLoading(false);
-    return false;
   };
 
   const logout = () => {
-    localStorage.removeItem('drishyam_user');
+    setAuthToken(null);
     setUser(null);
+  };
+
+  const register = async (name: string, email: string, password: string, roleKey: RoleKey): Promise<boolean> => {
+    setIsLoading(true);
+    try {
+      const response = await api.post('/auth/register', { name, email, password, role: roleKey });
+      const { token, user: backendUser } = response.data?.data ?? {};
+
+      if (!token || !backendUser) {
+        return false;
+      }
+
+      setAuthToken(token);
+      setUser(mapUser(backendUser));
+      return true;
+    } catch {
+      setAuthToken(null);
+      setUser(null);
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const isAuthenticated = !!user;
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, isAuthenticated, isLoading }}>
+    <AuthContext.Provider value={{ user, login, register, logout, isAuthenticated, isLoading }}>
       {children}
     </AuthContext.Provider>
   );

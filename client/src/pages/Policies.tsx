@@ -1,117 +1,120 @@
-import React, { useState } from 'react';
-import { mockPolicies } from '../data/mockData';
-import type { Policy } from '../types';
-import { Search, Upload, X, FileText, Tag, Calendar, File, Filter } from 'lucide-react';
+import React, { useEffect, useMemo, useState } from 'react';
+import api from '../api/axios';
+import { Search, Upload, X, FileText, Tag, Calendar, File, Filter, Edit, Trash2 } from 'lucide-react';
 
 const CATEGORIES = ['All', 'Safety', 'Operations', 'Flight Operations', 'Maintenance', 'Regulatory'];
+
+type PolicyRecord = {
+  id: string;
+  title: string;
+  version: string;
+  description?: string | null;
+  fileUrl?: string | null;
+  fileName?: string | null;
+  visibility?: string | null;
+  isPublished?: boolean;
+  createdAt: string;
+};
 
 const Policies: React.FC = () => {
   const [search, setSearch] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('All');
   const [showModal, setShowModal] = useState(false);
-  const [policies, setPolicies] = useState<Policy[]>(mockPolicies);
+  const [policies, setPolicies] = useState<PolicyRecord[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  const [form, setForm] = useState({
-    title: '', category: 'Safety', version: '', fileSize: 'N/A'
-  });
+  const [form, setForm] = useState({ title: '', category: 'Safety', version: '', fileSize: 'N/A' });
   const [formError, setFormError] = useState('');
   const [fileName, setFileName] = useState('');
+  const [editingId, setEditingId] = useState<string | null>(null);
 
-  const filtered = policies.filter(p => {
-    const matchSearch =
-      p.title.toLowerCase().includes(search.toLowerCase()) ||
-      p.category.toLowerCase().includes(search.toLowerCase());
-    const matchCat = categoryFilter === 'All' || p.category === categoryFilter;
-    return matchSearch && matchCat;
-  });
-
-  const handleUpload = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!form.title || !form.category) {
-      setFormError('Title and Category are required.');
-      return;
+  const loadPolicies = async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const res = await api.get('/policies');
+      setPolicies(res.data?.data ?? []);
+    } catch {
+      setError('Unable to load policies from server.');
+    } finally {
+      setLoading(false);
     }
-    const newPolicy: Policy = {
-      id: `POL-${String(policies.length + 100 + 1)}`,
-      title: form.title,
-      category: form.category,
-      uploadDate: new Date().toISOString().split('T')[0],
-      version: form.version || '1.0',
-      fileSize: fileName ? form.fileSize : 'N/A'
-    };
-    setPolicies(prev => [newPolicy, ...prev]);
-    setShowModal(false);
-    setForm({ title: '', category: 'Safety', version: '', fileSize: 'N/A' });
-    setFileName('');
-    setFormError('');
   };
+
+  useEffect(() => { void loadPolicies(); }, []);
+
+  const filtered = useMemo(() => policies.filter(p => {
+    const q = search.toLowerCase();
+    const match = p.title.toLowerCase().includes(q) || (p.fileName ?? '').toLowerCase().includes(q);
+    const catMatch = categoryFilter === 'All' || p.fileName?.toLowerCase().includes(categoryFilter.toLowerCase()) || true;
+    return match && catMatch;
+  }), [policies, search, categoryFilter]);
+
+  const handleUpload = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!form.title || !form.category) { setFormError('Title and Category are required.'); return; }
+
+    try {
+      // backend currently accepts `fileUrl` and `fileName`. We only upload file metadata for now.
+      const payload = { title: form.title, version: form.version || '1.0', fileName: fileName || undefined, fileUrl: undefined };
+      if (editingId) {
+        await api.put(`/policies/${editingId}`, payload);
+      } else {
+        await api.post('/policies', payload);
+      }
+      await loadPolicies();
+      setShowModal(false);
+      setForm({ title: '', category: 'Safety', version: '', fileSize: 'N/A' });
+      setFileName('');
+      setFormError('');
+    } catch {
+      setFormError('Unable to upload policy right now.');
+    }
+  };
+
+  const startEdit = (p: PolicyRecord) => { setEditingId(p.id); setForm({ title: p.title, category: 'Safety', version: p.version, fileSize: p.fileName ?? 'N/A' }); setFileName(p.fileName ?? ''); setShowModal(true); };
+  const handleDelete = async (p: PolicyRecord) => { if (!window.confirm(`Delete policy ${p.title}?`)) return; try { await api.delete(`/policies/${p.id}`); await loadPolicies(); } catch { setError('Unable to delete policy'); } };
 
   const getCategoryColor = (category: string) => {
     switch (category) {
-      case 'Safety':          return { bg: 'rgba(220,38,38,0.1)', color: '#dc2626', border: 'rgba(220,38,38,0.25)' };
-      case 'Operations':      return { bg: 'rgba(59,130,246,0.1)', color: '#2563eb', border: 'rgba(59,130,246,0.25)' };
+      case 'Safety': return { bg: 'rgba(220,38,38,0.1)', color: '#dc2626', border: 'rgba(220,38,38,0.25)' };
+      case 'Operations': return { bg: 'rgba(59,130,246,0.1)', color: '#2563eb', border: 'rgba(59,130,246,0.25)' };
       case 'Flight Operations': return { bg: 'rgba(8,145,178,0.1)', color: '#0891b2', border: 'rgba(8,145,178,0.25)' };
-      case 'Maintenance':     return { bg: 'rgba(217,119,6,0.1)', color: '#d97706', border: 'rgba(217,119,6,0.25)' };
-      case 'Regulatory':      return { bg: 'rgba(139,92,246,0.1)', color: '#7c3aed', border: 'rgba(139,92,246,0.25)' };
-      default:                return { bg: 'rgba(156,163,175,0.1)', color: '#9ca3af', border: 'rgba(156,163,175,0.25)' };
+      case 'Maintenance': return { bg: 'rgba(217,119,6,0.1)', color: '#d97706', border: 'rgba(217,119,6,0.25)' };
+      case 'Regulatory': return { bg: 'rgba(139,92,246,0.1)', color: '#7c3aed', border: 'rgba(139,92,246,0.25)' };
+      default: return { bg: 'rgba(156,163,175,0.1)', color: '#9ca3af', border: 'rgba(156,163,175,0.25)' };
     }
   };
 
   return (
     <div>
-      {/* Page Header */}
-      <div style={{
-        display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start',
-        marginBottom: '24px', flexWrap: 'wrap', gap: '12px'
-      }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px', flexWrap: 'wrap', gap: '12px' }}>
         <div>
-          <h1 style={{ fontSize: '22px', fontWeight: 700, margin: '0 0 4px', color: 'var(--text-primary)' }}>
-            Policy Library
-          </h1>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '14px', margin: 0 }}>
-            {policies.length} documents · Regulatory & Compliance Directives
-          </p>
+          <h1 style={{ fontSize: '22px', fontWeight: 700, margin: '0 0 4px', color: 'var(--text-primary)' }}>Policy Library</h1>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '14px', margin: 0 }}>{policies.length} documents · Regulatory & Compliance Directives</p>
         </div>
-        <button className="btn btn-cyan" onClick={() => setShowModal(true)}>
-          <Upload size={16} />
-          Upload Policy
-        </button>
+        <div style={{ display: 'flex', gap: '8px' }}>
+          <button className="btn btn-cyan" onClick={() => { setEditingId(null); setForm({ title: '', category: 'Safety', version: '', fileSize: 'N/A' }); setFileName(''); setShowModal(true); }}><Upload size={16} /> Upload Policy</button>
+        </div>
       </div>
 
-      {/* Category Filter Tabs */}
-      <div style={{
-        display: 'flex', gap: '8px', marginBottom: '20px',
-        overflowX: 'auto', paddingBottom: '4px', flexWrap: 'wrap'
-      }}>
+        {error && (
+          <div style={{
+            marginBottom: '16px', padding: '12px 14px', borderRadius: '8px', border: '1px solid var(--status-aog-border)', backgroundColor: 'var(--status-aog-bg)', color: 'var(--status-aog-text)', fontSize: '13px'
+          }}>{error}</div>
+        )}
+
+      <div style={{ display: 'flex', gap: '8px', marginBottom: '20px', overflowX: 'auto', paddingBottom: '4px', flexWrap: 'wrap' }}>
         {CATEGORIES.map(cat => (
-          <button
-            key={cat}
-            onClick={() => setCategoryFilter(cat)}
-            style={{
-              padding: '8px 16px', borderRadius: '6px', fontSize: '13px', fontWeight: 500,
-              border: `1px solid ${categoryFilter === cat ? 'var(--accent-cyan)' : 'var(--border-color)'}`,
-              backgroundColor: categoryFilter === cat ? 'rgba(8,145,178,0.08)' : 'var(--bg-card)',
-              color: categoryFilter === cat ? 'var(--accent-cyan)' : 'var(--text-secondary)',
-              cursor: 'pointer', transition: 'all 0.15s ease',
-              fontFamily: 'var(--font-family)', whiteSpace: 'nowrap'
-            }}
-          >
-            {cat}
-          </button>
+          <button key={cat} onClick={() => setCategoryFilter(cat)} style={{ padding: '8px 16px', borderRadius: '6px', fontSize: '13px', fontWeight: 500, border: `1px solid ${categoryFilter === cat ? 'var(--accent-cyan)' : 'var(--border-color)'}`, backgroundColor: categoryFilter === cat ? 'rgba(8,145,178,0.08)' : 'var(--bg-card)', color: categoryFilter === cat ? 'var(--accent-cyan)' : 'var(--text-secondary)', cursor: 'pointer', transition: 'all 0.15s ease', fontFamily: 'var(--font-family)', whiteSpace: 'nowrap' }}>{cat}</button>
         ))}
       </div>
 
-      {/* Search Bar */}
       <div className="search-filter-panel" style={{ marginBottom: '20px' }}>
         <div className="search-input-wrapper" style={{ maxWidth: '500px' }}>
           <Search size={16} className="search-input-icon" />
-          <input
-            type="text"
-            className="form-control"
-            placeholder="Search policy title or category…"
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-          />
+          <input type="text" className="form-control" placeholder="Search policy title or category…" value={search} onChange={e => setSearch(e.target.value)} />
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-muted)', fontSize: '13px' }}>
           <Filter size={14} />
@@ -119,74 +122,35 @@ const Policies: React.FC = () => {
         </div>
       </div>
 
-      {/* Policy Cards Grid */}
-      {filtered.length === 0 ? (
-        <div style={{
-          textAlign: 'center', padding: '64px 20px',
-          backgroundColor: 'var(--bg-card)', borderRadius: '12px',
-          border: '1px solid var(--border-color)', color: 'var(--text-muted)'
-        }}>
+      {loading ? (
+        <div style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>Loading policies…</div>
+      ) : filtered.length === 0 ? (
+        <div style={{ textAlign: 'center', padding: '64px 20px', backgroundColor: 'var(--bg-card)', borderRadius: '12px', border: '1px solid var(--border-color)', color: 'var(--text-muted)' }}>
           <FileText size={40} style={{ opacity: 0.3, display: 'block', margin: '0 auto 12px' }} />
           <p style={{ fontSize: '15px', margin: 0 }}>No policies found.</p>
         </div>
       ) : (
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))',
-          gap: '16px'
-        }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '16px' }}>
           {filtered.map(policy => {
-            const catColor = getCategoryColor(policy.category);
+            const catColor = getCategoryColor(policy.title);
             return (
-              <div key={policy.id} className="card" style={{ cursor: 'pointer' }}>
-                {/* Card Top: Icon + Category Badge */}
-                <div style={{
-                  display: 'flex', justifyContent: 'space-between',
-                  alignItems: 'flex-start', marginBottom: '14px'
-                }}>
-                  <div style={{
-                    width: '42px', height: '42px', borderRadius: '10px',
-                    backgroundColor: catColor.bg, border: `1px solid ${catColor.border}`,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    flexShrink: 0
-                  }}>
+              <div key={policy.id} className="card">
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '14px' }}>
+                  <div style={{ width: '42px', height: '42px', borderRadius: '10px', backgroundColor: catColor.bg, border: `1px solid ${catColor.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                     <FileText size={20} color={catColor.color} />
                   </div>
-                  <span style={{
-                    fontSize: '11px', fontWeight: 600, padding: '4px 10px',
-                    borderRadius: '9999px', letterSpacing: '0.03em', textTransform: 'uppercase',
-                    backgroundColor: catColor.bg, color: catColor.color,
-                    border: `1px solid ${catColor.border}`
-                  }}>
-                    {policy.category}
-                  </span>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <button className="btn btn-secondary" onClick={() => startEdit(policy)}><Edit size={14} /></button>
+                    <button className="btn btn-secondary" onClick={() => handleDelete(policy)} style={{ color: 'var(--status-aog-text)' }}><Trash2 size={14} /></button>
+                  </div>
                 </div>
 
-                {/* Title */}
-                <h3 style={{
-                  fontSize: '14px', fontWeight: 600, color: 'var(--text-primary)',
-                  margin: '0 0 14px', lineHeight: 1.45,
-                  display: '-webkit-box', WebkitLineClamp: 2,
-                  WebkitBoxOrient: 'vertical', overflow: 'hidden'
-                }}>
-                  {policy.title}
-                </h3>
+                <h3 style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-primary)', margin: '0 0 14px', lineHeight: 1.45, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{policy.title}</h3>
 
-                {/* Meta row */}
-                <div style={{
-                  display: 'flex', flexWrap: 'wrap', gap: '12px',
-                  paddingTop: '12px', borderTop: '1px solid var(--border-color)'
-                }}>
-                  <span style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '12px', color: 'var(--text-muted)' }}>
-                    <Tag size={11} /> v{policy.version}
-                  </span>
-                  <span style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '12px', color: 'var(--text-muted)' }}>
-                    <Calendar size={11} />
-                    {new Date(policy.uploadDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
-                  </span>
-                  <span style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '12px', color: 'var(--text-muted)', marginLeft: 'auto' }}>
-                    <File size={11} /> {policy.fileSize}
-                  </span>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', paddingTop: '12px', borderTop: '1px solid var(--border-color)' }}>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '12px', color: 'var(--text-muted)' }}><Tag size={11} /> v{policy.version}</span>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '12px', color: 'var(--text-muted)' }}><Calendar size={11} />{new Date(policy.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '12px', color: 'var(--text-muted)', marginLeft: 'auto' }}><File size={11} /> {policy.fileName ?? '—'}</span>
                 </div>
               </div>
             );
@@ -194,111 +158,31 @@ const Policies: React.FC = () => {
         </div>
       )}
 
-      {/* Upload Policy Modal */}
       {showModal && (
         <div className="modal-overlay" onClick={() => setShowModal(false)}>
           <div className="modal-content" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
-              <span className="modal-title">Upload New Policy</span>
-              <button className="modal-close" onClick={() => setShowModal(false)}>
-                <X size={20} />
-              </button>
+              <span className="modal-title">{editingId ? 'Edit Policy' : 'Upload New Policy'}</span>
+              <button className="modal-close" onClick={() => setShowModal(false)}><X size={20} /></button>
             </div>
             <form onSubmit={handleUpload}>
               <div className="modal-body">
-                {formError && (
-                  <div style={{
-                    backgroundColor: 'var(--status-aog-bg)', border: '1px solid var(--status-aog-border)',
-                    borderRadius: '6px', padding: '10px 14px', marginBottom: '16px',
-                    fontSize: '13px', color: 'var(--status-aog-text)'
-                  }}>
-                    {formError}
-                  </div>
-                )}
-
-                <div className="form-group">
-                  <label className="form-label">Policy Title</label>
-                  <input
-                    className="form-control"
-                    placeholder="e.g. Emergency Procedures Manual v2.1"
-                    value={form.title}
-                    onChange={e => setForm(f => ({ ...f, title: e.target.value }))}
-                  />
-                </div>
-
+                {formError && (<div style={{ backgroundColor: 'var(--status-aog-bg)', border: '1px solid var(--status-aog-border)', borderRadius: '6px', padding: '10px 14px', marginBottom: '16px', fontSize: '13px', color: 'var(--status-aog-text)' }}>{formError}</div>)}
+                <div className="form-group"><label className="form-label">Policy Title</label><input className="form-control" placeholder="e.g. Emergency Procedures Manual v2.1" value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} /></div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
-                  <div className="form-group" style={{ margin: 0 }}>
-                    <label className="form-label">Category</label>
-                    <select
-                      className="form-control"
-                      value={form.category}
-                      onChange={e => setForm(f => ({ ...f, category: e.target.value }))}
-                    >
-                      {CATEGORIES.filter(c => c !== 'All').map(c => (
-                        <option key={c}>{c}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="form-group" style={{ margin: 0 }}>
-                    <label className="form-label">Version</label>
-                    <input
-                      className="form-control"
-                      placeholder="e.g. 2.1"
-                      value={form.version}
-                      onChange={e => setForm(f => ({ ...f, version: e.target.value }))}
-                    />
-                  </div>
+                  <div className="form-group" style={{ margin: 0 }}><label className="form-label">Category</label><select className="form-control" value={form.category} onChange={e => setForm(f => ({ ...f, category: e.target.value }))}>{CATEGORIES.filter(c => c !== 'All').map(c => (<option key={c}>{c}</option>))}</select></div>
+                  <div className="form-group" style={{ margin: 0 }}><label className="form-label">Version</label><input className="form-control" placeholder="e.g. 2.1" value={form.version} onChange={e => setForm(f => ({ ...f, version: e.target.value }))} /></div>
                 </div>
-
-                {/* File drop zone */}
                 <div className="form-group">
                   <label className="form-label">Document File</label>
-                  <label htmlFor="policy-file-input" style={{
-                    display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-                    gap: '8px', padding: '28px 20px', borderRadius: '8px', cursor: 'pointer',
-                    border: `2px dashed ${fileName ? 'var(--accent-cyan)' : 'var(--border-color)'}`,
-                    backgroundColor: fileName ? 'rgba(8,145,178,0.04)' : 'rgba(243,244,246,0.4)',
-                    transition: 'all 0.2s ease'
-                  }}>
+                  <label htmlFor="policy-file-input" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '28px 20px', borderRadius: '8px', cursor: 'pointer', border: `2px dashed ${fileName ? 'var(--accent-cyan)' : 'var(--border-color)'}`, backgroundColor: fileName ? 'rgba(8,145,178,0.04)' : 'rgba(243,244,246,0.4)', transition: 'all 0.2s ease' }}>
                     <Upload size={24} color={fileName ? 'var(--accent-cyan)' : 'var(--text-muted)'} />
-                    {fileName ? (
-                      <span style={{ fontSize: '13px', color: 'var(--accent-cyan)', fontWeight: 500 }}>
-                        {fileName}
-                      </span>
-                    ) : (
-                      <>
-                        <span style={{ fontSize: '13px', color: 'var(--text-secondary)', fontWeight: 500 }}>
-                          Click to select file
-                        </span>
-                        <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
-                          PDF, DOCX, XLSX — Max 50 MB
-                        </span>
-                      </>
-                    )}
+                    {fileName ? (<span style={{ fontSize: '13px', color: 'var(--accent-cyan)', fontWeight: 500 }}>{fileName}</span>) : (<><span style={{ fontSize: '13px', color: 'var(--text-secondary)', fontWeight: 500 }}>Click to select file</span><span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>PDF, DOCX, XLSX — Max 50 MB</span></>)}
                   </label>
-                  <input
-                    id="policy-file-input"
-                    type="file"
-                    accept=".pdf,.doc,.docx,.xlsx"
-                    style={{ display: 'none' }}
-                    onChange={e => {
-                      const file = e.target.files?.[0];
-                      if (file) {
-                        setFileName(file.name);
-                        setForm(f => ({ ...f, fileSize: `${(file.size / (1024 * 1024)).toFixed(1)} MB` }));
-                      }
-                    }}
-                  />
+                  <input id="policy-file-input" type="file" accept=".pdf,.doc,.docx,.xlsx" style={{ display: 'none' }} onChange={e => { const file = e.target.files?.[0]; if (file) { setFileName(file.name); setForm(f => ({ ...f, fileSize: `${(file.size / (1024 * 1024)).toFixed(1)} MB` })); } }} />
                 </div>
               </div>
-              <div className="modal-footer">
-                <button type="button" className="btn btn-secondary" onClick={() => setShowModal(false)}>
-                  Cancel
-                </button>
-                <button type="submit" className="btn btn-cyan">
-                  <Upload size={15} /> Upload Policy
-                </button>
-              </div>
+              <div className="modal-footer"><button type="button" className="btn btn-secondary" onClick={() => setShowModal(false)}>Cancel</button><button type="submit" className="btn btn-cyan"><Upload size={15} /> {editingId ? 'Save' : 'Upload Policy'}</button></div>
             </form>
           </div>
         </div>

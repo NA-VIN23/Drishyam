@@ -1,13 +1,15 @@
 import React from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { ROUTE_ACCESS, type RoleKey } from '../data/roles';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
+  allowedRoles?: RoleKey[];
 }
 
-const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
-  const { isAuthenticated, isLoading } = useAuth();
+const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, allowedRoles }) => {
+  const { isAuthenticated, isLoading, user } = useAuth();
 
   if (isLoading) {
     return (
@@ -45,6 +47,11 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
 
   if (!isAuthenticated) {
     return <Navigate to="/" replace />;
+  }
+
+  const routeRoles = allowedRoles ?? ROUTE_ACCESS['/dashboard'];
+  if (routeRoles.length > 0 && user && !routeRoles.includes(user.roleKey as RoleKey)) {
+    return <Navigate to="/dashboard" replace />;
   }
 
   return <>{children}</>;

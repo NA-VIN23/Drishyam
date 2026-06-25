@@ -197,7 +197,7 @@ const Navbar: React.FC<NavbarProps> = ({ onMenuToggle }) => {
                 {user.name}
               </div>
               <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
-                {user.role}
+                {user.roleLabel}
               </div>
             </div>
             <img 

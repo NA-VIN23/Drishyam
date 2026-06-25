@@ -1,7 +1,8 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { LayoutDashboard, Plane, Users, FileText, LogOut, X } from 'lucide-react';
+import { LayoutDashboard, Plane, Users, FileText, LogOut, X, ClipboardList } from 'lucide-react';
+import { ROUTE_ACCESS, type RoleKey } from '../data/roles';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -12,11 +13,14 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
   const { logout, user } = useAuth();
 
   const navItems = [
-    { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
-    { name: 'Aircraft', path: '/aircraft', icon: Plane },
-    { name: 'Crew', path: '/crew', icon: Users },
-    { name: 'Policies', path: '/policies', icon: FileText }
+    { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard, roles: ROUTE_ACCESS['/dashboard'] },
+    { name: 'Aircraft', path: '/aircraft', icon: Plane, roles: ROUTE_ACCESS['/aircraft'] },
+    { name: 'Crew', path: '/crew', icon: Users, roles: ROUTE_ACCESS['/crew'] },
+    { name: 'Flight Logs', path: '/flight-logs', icon: ClipboardList, roles: ROUTE_ACCESS['/flight-logs'] },
+    { name: 'Policies', path: '/policies', icon: FileText, roles: ROUTE_ACCESS['/policies'] },
   ];
+
+  const visibleNavItems = user ? navItems.filter((item) => item.roles.includes(user.roleKey as RoleKey)) : navItems;
 
   return (
     <>
@@ -108,7 +112,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
           flexDirection: 'column',
           gap: '8px'
         }}>
-          {navItems.map((item) => {
+          {visibleNavItems.map((item) => {
             const Icon = item.icon;
             return (
               <NavLink
@@ -179,7 +183,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
                   overflow: 'hidden',
                   whiteSpace: 'nowrap'
                 }}>
-                  {user.role}
+                  {user.roleLabel}
                 </div>
               </div>
             </div>

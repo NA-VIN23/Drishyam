@@ -6,59 +6,370 @@ datasource db {
   provider = "postgresql"
 }
 
-enum UserRole {
-  ADMIN
-  MANAGER
-  TECHNICIAN
-  SAFETY_OFFICER
-  OPERATIONS
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
 }
 
-model User {
-  id          String   @id @default(uuid())
-  name        String
-  email       String   @unique
-  password    String
+enum AircraftStatus {
+  ACTIVE
+  IN_MAINTENANCE
+  GROUNDED
+  RETIRED
+}
 
-  role        UserRole
+enum CrewStatus {
+  AVAILABLE
+  ASSIGNED
+  OFF_DUTY
+  ON_LEAVE
+}
+
+enum FlightLogStatus {
+  DRAFT
+  SUBMITTED
+  APPROVED
+}
+
+enum MaintenanceStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+}
+
+enum MaintenancePriority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum SnagSeverity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum SnagStatus {
+  OPEN
+  ACKNOWLEDGED
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+}
+
+enum PolicyVisibility {
+  PUBLIC
+  INTERNAL
+  ROLE_RESTRICTED
+}
+
+model Role {
+  id          String   @id @default(uuid())
+  key         String   @unique
+  name        String
+  description String?
+
+  users       User[]
 
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
 
-model Aircraft {
-  id            String   @id @default(uuid())
-  aircraftNo    String   @unique
-  model         String
-  manufacturer  String
+model User {
+  id           String     @id @default(uuid())
+  name         String
+  email        String     @unique
+  passwordHash String
+  status       UserStatus @default(ACTIVE)
 
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  roleId       String
+  role         Role       @relation(fields: [roleId], references: [id], onDelete: Restrict)
+
+  flightLogs   FlightLog[] @relation("FlightLogCreatedBy")
+  snagReports  Snag[]     @relation("SnagReportedByUser")
+  snagChanges  SnagHistory[] @relation("SnagHistoryChangedBy")
+  auditLogs    AuditLog[] @relation("AuditLogActor")
+  reports      Report[]   @relation("ReportGenerator")
+  policies     Policy[]   @relation("PolicyCreatedBy")
+
+  lastLoginAt  DateTime?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  @@index([roleId])
+  @@index([status])
+}
+
+model Aircraft {
+  id               String           @id @default(uuid())
+  aircraftNo       String           @unique
+  model            String
+  manufacturer     String
+  serialNumber     String?          @unique
+  registrationNo   String?          @unique
+  status           AircraftStatus   @default(ACTIVE)
+  totalFlightHours  Float            @default(0)
+  notes            String?
+
+  flightLogs       FlightLog[]
+  maintenanceRecords MaintenanceRecord[]
+  snags            Snag[]
+  healthScores     AircraftHealthScore[]
+
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+
+  @@index([status])
 }
 
 model Crew {
-  id          String   @id @default(uuid())
-  name        String
-  designation String
-  email       String?  @unique
+  id              String      @id @default(uuid())
+  employeeNo      String?     @unique
+  name            String
+  designation     String
+  email           String?     @unique
+  phone           String?
+  licenseNumber   String?     @unique
+  status          CrewStatus  @default(AVAILABLE)
+  availabilityNote String?
 
-  createdAt   DateTime @default(now())
+  crewFlights     FlightLogCrew[]
+  maintenanceTasks MaintenanceTask[]
+  maintenanceAssignments MaintenanceRecord[] @relation("MaintenanceTechnician")
+  reportedSnags   Snag[]     @relation("SnagReportedByCrew")
+  assignedSnags   Snag[]     @relation("SnagAssignedCrew")
+  trainingRecords TrainingRecord[]
+
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  @@index([status])
+}
+
+model FlightLog {
+  id                 String          @id @default(uuid())
+  logNumber          String          @unique
+  flightDate         DateTime
+  flightHours        Float
+  engineRpm          Int?
+  engineTemperature  Float?
+  fuelUsed           Float?
+  notes              String?
+  status             FlightLogStatus @default(DRAFT)
+
+  createdById        String?
+  createdBy          User?           @relation("FlightLogCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+
+  aircraftId         String
+  aircraft           Aircraft        @relation(fields: [aircraftId], references: [id], onDelete: Restrict)
+
+  crewMembers        FlightLogCrew[]
+
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
+
+  @@index([aircraftId, flightDate])
+  @@index([status])
+  @@index([createdById])
+}
+
+model FlightLogCrew {
+  flightLogId String
+  crewId      String
+  dutyRole    String
+
+  flightLog   FlightLog @relation(fields: [flightLogId], references: [id], onDelete: Cascade)
+  crew        Crew      @relation(fields: [crewId], references: [id], onDelete: Cascade)
+
+  @@id([flightLogId, crewId])
+  @@index([crewId])
+}
+
+model MaintenanceRecord {
+  id                  String              @id @default(uuid())
+  workOrderNumber     String              @unique
+  title               String
+  description         String?
+  status              MaintenanceStatus   @default(OPEN)
+  priority            MaintenancePriority @default(MEDIUM)
+  openedAt            DateTime            @default(now())
+  startedAt           DateTime?
+  completedAt         DateTime?
+
+  aircraftId          String
+  aircraft            Aircraft            @relation(fields: [aircraftId], references: [id], onDelete: Restrict)
+
+  assignedTechnicianId String?
+  assignedTechnician   Crew?               @relation("MaintenanceTechnician", fields: [assignedTechnicianId], references: [id], onDelete: SetNull)
+
+  tasks               MaintenanceTask[]
+  snag                Snag?
+
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
+
+  @@index([aircraftId, status])
+  @@index([assignedTechnicianId])
+}
+
+model MaintenanceTask {
+  id                  String             @id @default(uuid())
+  maintenanceRecordId String
+  title               String
+  description         String?
+  status              MaintenanceStatus  @default(OPEN)
+  dueAt               DateTime?
+  completedAt         DateTime?
+
+  maintenanceRecord   MaintenanceRecord   @relation(fields: [maintenanceRecordId], references: [id], onDelete: Cascade)
+
+  assignedCrewId      String?
+  assignedCrew        Crew?               @relation(fields: [assignedCrewId], references: [id], onDelete: SetNull)
+
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
+
+  @@index([maintenanceRecordId, status])
+  @@index([assignedCrewId])
+}
+
+model Snag {
+  id                 String        @id @default(uuid())
+  snagNumber         String        @unique
+  title              String
+  description        String?
+  severity           SnagSeverity  @default(MEDIUM)
+  status             SnagStatus    @default(OPEN)
+  detectedAt         DateTime      @default(now())
+  resolvedAt         DateTime?
+
+  aircraftId         String
+  aircraft           Aircraft      @relation(fields: [aircraftId], references: [id], onDelete: Restrict)
+
+  reportedByUserId   String?
+  reportedByUser     User?         @relation("SnagReportedByUser", fields: [reportedByUserId], references: [id], onDelete: SetNull)
+
+  reportedByCrewId   String?
+  reportedByCrew     Crew?         @relation("SnagReportedByCrew", fields: [reportedByCrewId], references: [id], onDelete: SetNull)
+
+  assignedCrewId     String?
+  assignedCrew       Crew?         @relation("SnagAssignedCrew", fields: [assignedCrewId], references: [id], onDelete: SetNull)
+
+  maintenanceRecordId String? @unique
+  maintenanceRecord   MaintenanceRecord? @relation(fields: [maintenanceRecordId], references: [id], onDelete: SetNull)
+
+  history            SnagHistory[]
+
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+
+  @@index([aircraftId, status])
+  @@index([severity])
+}
+
+model SnagHistory {
+  id           String     @id @default(uuid())
+  snagId       String
+  fromStatus   SnagStatus?
+  toStatus     SnagStatus
+  note         String?
+
+  snag         Snag       @relation(fields: [snagId], references: [id], onDelete: Cascade)
+
+  changedById  String?
+  changedBy    User?      @relation("SnagHistoryChangedBy", fields: [changedById], references: [id], onDelete: SetNull)
+
+  createdAt    DateTime   @default(now())
+
+  @@index([snagId, createdAt])
+  @@index([changedById])
 }
 
 model Policy {
-  id          String   @id @default(uuid())
+  id          String           @id @default(uuid())
   title       String
+  version     String           @default("1.0")
   description String?
   fileUrl     String?
+  fileName    String?
+  visibility  PolicyVisibility @default(INTERNAL)
+  isPublished Boolean          @default(false)
 
-  createdAt   DateTime @default(now())
+  createdById String?
+  createdBy   User?            @relation("PolicyCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  @@index([title])
 }
 
 model AuditLog {
+  id         String   @id @default(uuid())
+  action     String
+  entity     String
+  entityId   String
+  metadata   Json?
+
+  actorId    String?
+  actor      User?    @relation("AuditLogActor", fields: [actorId], references: [id], onDelete: SetNull)
+
+  createdAt  DateTime @default(now())
+
+  @@index([entity, entityId])
+  @@index([actorId])
+}
+
+model Report {
+  id           String   @id @default(uuid())
+  title        String
+  reportType   String
+  fileUrl      String?
+  parameters   Json?
+
+  generatedById String?
+  generatedBy   User?    @relation("ReportGenerator", fields: [generatedById], references: [id], onDelete: SetNull)
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([reportType])
+  @@index([generatedById])
+}
+
+model TrainingRecord {
   id          String   @id @default(uuid())
-  action      String
-  entity      String
-  entityId    String
+  crewId      String
+  courseName  String
+  provider    String?
+  status      String   @default("NOT_STARTED")
+  completedAt DateTime?
+  expiresAt   DateTime?
+  notes       String?
+
+  crew        Crew     @relation(fields: [crewId], references: [id], onDelete: Cascade)
 
   createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([crewId, status])
+}
+
+model AircraftHealthScore {
+  id         String   @id @default(uuid())
+  aircraftId String
+  score      Int
+  factors    Json?
+  assessedAt DateTime @default(now())
+
+  aircraft   Aircraft @relation(fields: [aircraftId], references: [id], onDelete: Cascade)
+
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([aircraftId, assessedAt])
 }
