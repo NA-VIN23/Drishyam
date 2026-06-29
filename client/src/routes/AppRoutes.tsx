@@ -7,8 +7,11 @@ import Login from "../pages/Login";
 import Dashboard from "../pages/Dashboard";
 import Aircraft from "../pages/Aircraft";
 import Crew from "../pages/Crew";
+import CrewPlanning from "../pages/CrewPlanning";
 import Policies from "../pages/Policies";
 import FlightLogs from "../pages/FlightLogs";
+import Snags from "../pages/Snags";
+import Maintenance from "../pages/Maintenance";
 import { ROUTE_ACCESS } from "../data/roles";
 
 export default function AppRoutes() {
@@ -28,8 +31,11 @@ export default function AppRoutes() {
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/aircraft" element={<ProtectedRoute allowedRoles={ROUTE_ACCESS['/aircraft']}><Aircraft /></ProtectedRoute>} />
             <Route path="/crew" element={<ProtectedRoute allowedRoles={ROUTE_ACCESS['/crew']}><Crew /></ProtectedRoute>} />
+            <Route path="/crew-planning" element={<ProtectedRoute allowedRoles={ROUTE_ACCESS['/crew-planning']}><CrewPlanning /></ProtectedRoute>} />
             <Route path="/policies" element={<ProtectedRoute allowedRoles={ROUTE_ACCESS['/policies']}><Policies /></ProtectedRoute>} />
             <Route path="/flight-logs" element={<ProtectedRoute allowedRoles={ROUTE_ACCESS['/flight-logs']}><FlightLogs /></ProtectedRoute>} />
+            <Route path="/snags" element={<ProtectedRoute allowedRoles={ROUTE_ACCESS['/snags']}><Snags /></ProtectedRoute>} />
+            <Route path="/maintenance" element={<ProtectedRoute allowedRoles={ROUTE_ACCESS['/maintenance']}><Maintenance /></ProtectedRoute>} />
           </Route>
         </Routes>
       </BrowserRouter>

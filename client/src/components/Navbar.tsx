@@ -22,6 +22,8 @@ const Navbar: React.FC<NavbarProps> = ({ onMenuToggle }) => {
         return 'Fleet Inventory & Operational Status';
       case '/crew':
         return 'Operations Crew & Flight Manifest';
+      case '/crew-planning':
+        return 'Crew Shift Planning & Certification Management';
       case '/policies':
         return 'Aviation Policies & Compliance Directives';
       default:

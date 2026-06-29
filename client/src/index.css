@@ -381,8 +381,18 @@ select.form-control {
   border-radius: 12px;
   width: 100%;
   max-width: 500px;
+  max-height: calc(100vh - 48px);
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
   animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.modal-content > form {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
 }
 
 .modal-header {
@@ -412,6 +422,9 @@ select.form-control {
 
 .modal-body {
   padding: 24px;
+  overflow-y: auto;
+  flex: 1 1 auto;
+  min-height: 0;
 }
 
 .modal-footer {
@@ -421,6 +434,16 @@ select.form-control {
   display: flex;
   justify-content: flex-end;
   gap: 12px;
+  flex-shrink: 0;
+}
+
+@media (max-height: 720px) {
+  .modal-content {
+    max-height: calc(100vh - 24px);
+  }
+  .modal-body {
+    padding: 18px;
+  }
 }
 
 /* Navigation & Main Layout elements */

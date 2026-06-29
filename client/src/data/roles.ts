@@ -25,7 +25,10 @@ export const ROUTE_ACCESS: Record<string, RoleKey[]> = {
   '/dashboard': ROLE_OPTIONS.map((role) => role.key),
   '/aircraft': ['ADMIN', 'MANAGER', 'ENGINEER', 'TECHNICIAN', 'OPERATIONS'],
   '/crew': ['ADMIN', 'MANAGER', 'ENGINEER', 'TECHNICIAN', 'OPERATIONS'],
+  '/crew-planning': ['ADMIN', 'MANAGER', 'ENGINEER', 'TECHNICIAN', 'OPERATIONS'],
   '/policies': ['ADMIN', 'MANAGER', 'ENGINEER', 'TECHNICIAN', 'OPERATIONS'],
   '/flight-logs': ['ADMIN', 'MANAGER', 'ENGINEER', 'TECHNICIAN', 'OPERATIONS'],
+  '/snags': ['ADMIN', 'MANAGER', 'ENGINEER', 'TECHNICIAN', 'OPERATIONS'],
+  '/maintenance': ['ADMIN', 'MANAGER', 'ENGINEER', 'TECHNICIAN', 'OPERATIONS'],
 };
 

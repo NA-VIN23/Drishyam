@@ -90,4 +90,54 @@ maintenanceRouter.delete(
   }),
 );
 
+// Update an individual task
+maintenanceRouter.put(
+  "/tasks/:taskId",
+  asyncHandler(async (req, res) => {
+    const taskId = String(req.params.taskId);
+    const { status, completedAt, assignedCrewId } = req.body as Record<string, unknown>;
+
+    const data = await prisma.maintenanceTask.update({
+      where: { id: taskId },
+      data: {
+        status: status as any,
+        completedAt: completedAt ? new Date(String(completedAt)) : null,
+        assignedCrewId: assignedCrewId ? String(assignedCrewId) : undefined,
+      },
+    });
+
+    res.json({ success: true, data });
+  }),
+);
+
+// Add an individual task to a work order
+maintenanceRouter.post(
+  "/:id/tasks",
+  asyncHandler(async (req, res) => {
+    const maintenanceRecordId = String(req.params.id);
+    const { title, description, assignedCrewId, dueAt } = req.body as Record<string, unknown>;
+
+    const data = await prisma.maintenanceTask.create({
+      data: {
+        maintenanceRecordId,
+        title: String(title),
+        description: description ? String(description) : undefined,
+        assignedCrewId: assignedCrewId ? String(assignedCrewId) : undefined,
+        dueAt: dueAt ? new Date(String(dueAt)) : undefined,
+      },
+    });
+
+    res.status(201).json({ success: true, data });
+  }),
+);
+
+// Delete an individual task
+maintenanceRouter.delete(
+  "/tasks/:taskId",
+  asyncHandler(async (req, res) => {
+    await prisma.maintenanceTask.delete({ where: { id: String(req.params.taskId) } });
+    res.status(204).send();
+  }),
+);
+
 export default maintenanceRouter;

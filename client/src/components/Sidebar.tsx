@@ -1,7 +1,7 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { LayoutDashboard, Plane, Users, FileText, LogOut, X, ClipboardList } from 'lucide-react';
+import { LayoutDashboard, Plane, Users, FileText, LogOut, X, ClipboardList, AlertTriangle, Wrench, CalendarCheck } from 'lucide-react';
 import { ROUTE_ACCESS, type RoleKey } from '../data/roles';
 
 interface SidebarProps {
@@ -16,7 +16,10 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
     { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard, roles: ROUTE_ACCESS['/dashboard'] },
     { name: 'Aircraft', path: '/aircraft', icon: Plane, roles: ROUTE_ACCESS['/aircraft'] },
     { name: 'Crew', path: '/crew', icon: Users, roles: ROUTE_ACCESS['/crew'] },
+    { name: 'Crew Planning', path: '/crew-planning', icon: CalendarCheck, roles: ROUTE_ACCESS['/crew-planning'] },
     { name: 'Flight Logs', path: '/flight-logs', icon: ClipboardList, roles: ROUTE_ACCESS['/flight-logs'] },
+    { name: 'Snags', path: '/snags', icon: AlertTriangle, roles: ROUTE_ACCESS['/snags'] },
+    { name: 'Maintenance', path: '/maintenance', icon: Wrench, roles: ROUTE_ACCESS['/maintenance'] },
     { name: 'Policies', path: '/policies', icon: FileText, roles: ROUTE_ACCESS['/policies'] },
   ];
 

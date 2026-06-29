@@ -1,13 +1,13 @@
 # Project Status
 
 ## Overall Progress
-The platform has established its core database foundation, user authentication, and core operations modules (Aircraft, Crew, Policies, and Flight Logs). We are currently in the process of transitioning to advanced operations and maintenance modules (such as Snags and Work Orders) before analytics and AI features.
+The platform has a solid MVP foundation with core backend and frontend modules completed. Authentication, aircraft, crew, policies, flight logs, snags, maintenance, and crew planning workflows are implemented. The current focus is live dashboard integration, analytics/reporting, and quality polish.
 
 ---
 
 ## Current Development Phase
 - **Phase**: Operations & Maintenance Foundation (MVP Phase)
-- **Current Focus**: Connecting the operations dashboard, completing basic crew certifications/shift templates, and preparing for Snag & Maintenance Work Order UI integration.
+- **Current Focus**: Wiring the dashboard to live backend metrics, refining maintenance and crew planning workflows, and moving toward reporting and analytics.
 
 ---
 
@@ -17,66 +17,75 @@ The platform has established its core database foundation, user authentication, 
 1. **Authentication & RBAC**:
    - Backend Express routes `/api/auth/register`, `/api/auth/login`, and `/api/auth/me`.
    - JWT authorization, validation, and role middlewares (`requireAuth`, `requireRole`).
-   - Frontend session check, `AuthContext` status, and page-level route wrapping (`ProtectedRoute`).
+   - Frontend `AuthContext` and page-level route protection via `ProtectedRoute`.
 2. **Aircraft Management**:
    - Full CRUD backend `/api/aircraft`.
-   - React UI page for fleet registration (Add, edit, delete, status tracking).
-3. **Crew Management (Basic CRUD)**:
+   - React aircraft page with list, filtering, add/edit/delete, and status badges.
+3. **Crew Management**:
    - Full CRUD backend `/api/crew`.
-   - React UI roster list and detail modals.
+   - React crew roster page with search, filters, add/edit/delete, and crew status displays.
 4. **Policy Management**:
-   - Backend routes `/api/policies` for regulatory metadata storage.
-   - React UI page for policy list and metadata uploads.
-5. **Flight Logs Module**:
-   - Transaction-based backend CRUD `/api/flight-logs` (verifies crew, logs hours, and automatically increments total aircraft hours).
-   - React UI page for flight log entries, engine metrics, fuel consumption, and crew assignments.
+   - Full CRUD backend `/api/policies` with role-based write access.
+   - React policies page with upload metadata UI, search, and policy cards.
+5. **Flight Logs**:
+   - Backend `/api/flight-logs` routes.
+   - React flight logs page with log entry form, crew assignments, filtering, and status tracking.
+6. **Snag Management**:
+   - Backend `/api/snags` CRUD and snag history tracking.
+   - React snags page with filters, search, create/edit/delete, status updates, and detail history.
+7. **Maintenance Management**:
+   - Backend `/api/maintenance-records` CRUD plus task endpoints (`POST /:id/tasks`, `PUT /tasks/:taskId`, `DELETE /tasks/:taskId`).
+   - React maintenance page with work order views, kanban/list styling, task creation, status updates, and assignment support.
+8. **Crew Shift Planning & Certifications**:
+   - Backend `/api/crew-certifications` and `/api/crew-shifts` CRUD.
+   - React crew planning page with certification and shift management.
 
 ### Modules In Progress
-- **Dashboard Integration**: Dashboard currently reads from local mock data file (`client/src/data/mockData.ts`). Needs integration with backend APIs to retrieve live counts.
+- **Dashboard Integration**:
+   - Backend summary route `/api/dashboard/summary` exists.
+   - Frontend dashboard page still uses local mock data in `client/src/data/mockData.ts` and requires live binding.
+- **UI consistency and error handling** across modules.
 
 ### Pending Modules
-1. **Crew Shift Planning & Certifications**:
-   - Currently, only basic crew details and availability statuses are handled.
-   - Missing shift models (`crew_shifts`) and certification tracking models (`crew_certifications`) in `schema.prisma`.
-2. **Snag Management (Client UI)**:
-   - Backend routes `/api/snags` are implemented.
-   - Needs React UI page for logging snags, assigning severity, and tracking resolution status.
-3. **Maintenance Management (Client UI)**:
-   - Backend routes `/api/maintenance-records` are implemented.
-   - Needs React UI page for work orders, task checklists, and assignment execution.
-4. **Reporting Engine**: CSV/PDF exports.
-5. **Analytics Dashboard**: Fleet health indicators and trends via Recharts.
-6. **AI Assistant & Predictive Maintenance**: Advanced features (Gemini indexing, Pandas, Scikit Learn) to be developed in later phases.
+1. **Reporting Engine**: CSV/PDF exports and report generation UI.
+2. **Analytics Dashboard**: Fleet health, utilization, and compliance trends.
+3. **AI Assistant & Predictive Maintenance**: Data-driven insights and advanced models.
+4. **Knowledge Base**: Searchable technical manuals and regulatory content.
+5. **User management / audit logging** enhancements beyond core RBAC.
 
 ---
 
 ## Current Technical Architecture
 
 ### Frontend Status
-- **Stack**: React (v19), TypeScript, Vite, Tailwind CSS + Custom CSS class patterns, Lucide icons, Axios.
-- **Routing**: React Router DOM (v7) in `AppRoutes.tsx`.
-- **Server Communication**: Base URL proxy configured in `vite.config.ts` redirecting `/api` to `http://localhost:5000`.
+- **Stack**: React (v19), TypeScript, Vite, Axios, Lucide icons.
+- **Routing**: React Router DOM in `client/src/routes/AppRoutes.tsx`.
+- **Auth / State**: Custom `AuthContext` and `ProtectedRoute` components.
+- **Styling**: CSS + Tailwind-style utility classes and custom theme variables.
 
 ### Backend Status
-- **Stack**: Node.js, Express, TypeScript, tsx watch runner.
-- **Port**: 5000
-- **Database Access**: Prisma Client using PostgreSQL.
+- **Stack**: Node.js, Express, TypeScript.
+- **Routes**: auth, aircraft, crew, crew-certifications, crew-shifts, policies, flight-logs, maintenance-records, snags, dashboard.
+- **Auth**: JWT middleware in `server/src/middleware/auth.ts`.
+- **RBAC**: Role guards and permission constants in `server/src/constants/rbac.ts`.
 
 ### Database Status
-- **Engine**: PostgreSQL (Supabase)
-- **Prisma Connection**: PG Pool via `@prisma/adapter-pg` inside `server/src/config/db.ts`.
-- **Schema**: Fully synced.
+- **Engine**: PostgreSQL via Prisma.
+- **Schema**: Includes `Role`, `User`, `Aircraft`, `Crew`, `CrewCertification`, `CrewShift`, `FlightLog`, `FlightLogCrew`, `MaintenanceRecord`, `MaintenanceTask`, `Snag`, `SnagHistory`, `Policy`, and related enums.
+- **Sync**: Prisma schema is present and aligned with implemented routes.
 
 ---
 
 ## Next Recommended Tasks
-1. **Snag Management UI**: Create `client/src/pages/Snags.tsx` and map it in `AppRoutes.tsx` under `/snags` to connect with backend `/api/snags` routes.
-2. **Maintenance UI**: Create `client/src/pages/Maintenance.tsx` to handle work orders.
-3. **Live Dashboard stats**: Implement a summary/stats aggregator route in the backend and pull live metrics to display on the dashboard card components.
+1. Wire `client/src/pages/Dashboard.tsx` to `/api/dashboard/summary` and replace the mock data summary.
+2. Add live dashboard metrics and KPI cards for open snags, active maintenance, policy counts, and aircraft status.
+3. Build reporting/export endpoints and UI.
+4. Develop analytics charts and trends for fleet health and operations.
+5. Improve validation and error handling in forms across maintenance, crew planning, and flight logs.
 
 ---
 
 ## Constraints (Do NOT Modify)
-- **Auth Middleware**: Custom token verification logic in `server/src/middleware/auth.ts` must remain consistent to preserve existing routing session continuity.
-- **Database Auto-Sync**: Do not push schema changes manually to Supabase without using Prisma CLI to avoid desynchronization.
-- **Tech Stack Guidelines**: Do not introduce additional complex state management libraries (e.g., Redux) unless explicitly requested; standard React Context and custom hooks should be used.
+- **Auth Middleware**: Keep the custom token verification and role middleware in `server/src/middleware/auth.ts` unchanged to preserve existing session behavior.
+- **Database Auto-Sync**: Use Prisma CLI for schema migrations; do not manually modify Supabase schema outside Prisma.
+- **Tech Stack Guidelines**: Do not introduce external state libraries like Redux unless explicitly requested; use React Context and custom hooks.
